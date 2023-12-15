@@ -1,0 +1,365 @@
+// file handling and exceptional handling project 
+
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <string>
+using namespace std;
+class my_bookdataexist : public exception
+{
+      public :
+      const char * what() const throw()
+      {
+        return "there is alredy entry exist//";
+      }  
+};
+class my_fileexist : public exception   // deals with exceptional
+{
+   public :
+      const char * what() const throw()
+      {
+        return "FILE DOES NOT EXIST//";
+      }  
+};
+class my_exception: public exception    // deals with exceptional 
+{
+    public :
+      const char * what() const throw()
+      {
+        return "already there is book with same bookid";
+      }
+};
+class Book {
+private:
+    int bookid;
+    string auther;
+    string title;
+    float price;
+
+public:
+    void displaydetails();
+    void inputBookafter(int  , string  , string  , float );
+    void store();
+    void editingchoice();
+    void viewAllTitles();
+    void searchByTitle(const string );
+    void searchBybookid(const int );
+    void searchByauther(const string );
+    void del(const int );
+    void edit(const int );
+    bool duplicacybookid(int );
+};
+
+// instance member function
+void Book::displaydetails() {
+    cout << bookid << " " << title << " " << auther << " " << price << endl;
+}
+void Book::store()
+{
+    ofstream file("baquar.txt" , ios::app);  // file.open("baquar.txt" , ios::app)
+    file.write((char*)this , sizeof(*this));
+    file.close();
+}
+void Book::editingchoice()
+{
+    int x;
+    int ch = 0;
+    string auther1 , title1;float price1;
+    cout << "choose: 1. authername 2. title  3.price" << endl;
+        do{
+                cin >> x;
+                cin.ignore();  // Consume newline character
+                if (x == 1) {
+                    cout << "enter authername" << endl;
+                    getline(cin, auther1);
+                    auther = auther1;
+                } else if (x == 2) {
+                    cout << "enter title" << endl;
+                    getline(cin, title1);
+                    title =  title1;
+                } else if (x == 3) {
+                    cout << "enter price" << endl;
+                    cin >> price1;
+                    price = price1;
+                } else {
+                    cout << "Invalid Choice" << endl;
+                } 
+                cout<< "would you want to edit still if yes 1 : other wise 0";
+                cin>>ch;
+                cin.ignore();
+
+        }while(ch);
+      
+}
+bool Book::duplicacybookid(int bokid)
+{
+    ifstream file("baquar.txt", ios::in);  // for reading mode
+    if(!file.is_open())
+       return false;
+    file.read((char *)this, sizeof(*this));
+    while (!file.eof()) {
+        if (bokid == bookid) {
+            file.close();
+            return true;
+        }
+        file.read((char *)this, sizeof(*this));
+    }
+    file.close();
+    return false; 
+}
+
+void Book::inputBookafter(int bokid , string tit , string auth , float pri) {
+   
+    if (duplicacybookid( bokid)) {
+        throw my_exception();
+    }
+    this->bookid = bokid;
+    this->title = tit;
+    this->auther = auth;
+    this->price  = pri;
+}
+
+void Book::viewAllTitles() {
+    ifstream fin("baquar.txt", ios::in);
+    try
+    {
+    if (!fin.is_open()) {
+        throw *(new my_fileexist);
+    }
+    cout<<"BOOK RECORDS"<<endl;
+    fin.read((char *)this, sizeof(*this));
+    while (!fin.eof()) {
+        displaydetails();
+        fin.read((char *)this, sizeof(*this));
+    }
+    }
+    catch(my_fileexist &e)
+    {
+        cout<<e.what()<<endl;
+    }
+    fin.close();
+}
+
+void Book::searchByTitle(const string tit) {
+    try
+    {
+    fstream file("baquar.txt", ios::in);
+    if (!file.is_open()) {
+       throw *(new my_fileexist);
+    }
+    bool search = false;
+    file.read((char *)this, sizeof(*this));
+    while (!file.eof()) {
+        if (tit.compare(title) == 0) {
+            displaydetails();
+            search = true;
+        }
+        file.read((char *)this, sizeof(*this));
+    }
+    if (!search) {
+        cout << "List not found" << endl;
+    }
+    file.close();
+    }
+     catch(my_fileexist &e)
+    {
+        cout<<e.what()<<endl;
+    }
+}
+
+void Book::searchBybookid(const int bokid) {
+    try
+    {
+    fstream file("baquar.txt", ios::in);
+    if (!file.is_open()) {
+       throw *(new my_fileexist);
+    }
+    bool search = false;
+    file.read((char *)this, sizeof(*this));
+    while (!file.eof()) {
+        if (bokid == bookid) {
+            displaydetails();
+            search = true;
+        }
+        file.read((char *)this, sizeof(*this));
+    }
+    if (!search) {
+        cout << "List not found" << endl;
+    }
+    file.close();
+    }
+    catch(my_fileexist &e)
+    {
+        cout<<e.what()<<endl;
+    }
+}
+
+void Book::searchByauther(const string auth) {
+    try
+    {
+    fstream file("baquar.txt", ios::in);
+    if (!file.is_open()) {
+       throw *(new my_fileexist);
+    }
+    bool search = false;
+    file.read((char *)this, sizeof(*this));
+    while (!file.eof()) {
+        if (auth.compare(auther) == 0) {
+            displaydetails();
+            search = true;
+        }
+        file.read((char *)this, sizeof(*this));
+    }
+    if (!search) {
+        cout << "List not found" << endl;
+    }
+    file.close();
+    }
+    catch(my_fileexist &e)
+    {
+        cout<<e.what()<<endl;
+    }
+}
+
+void Book::del(const int bokid) {
+    try
+    {
+    bool deleted = false;
+    ifstream file("baquar.txt", ios::in);
+    ofstream temp("file.txt", ios::app);
+    if (!file.is_open()) {
+        throw *(new my_fileexist);
+    }
+    file.read((char *)this, sizeof(*this));
+    while (!file.eof()) {
+        if (bokid == bookid) {
+            deleted = true;
+        } else {
+            temp.write((char *)this, sizeof(*this));
+        }
+        file.read((char *)this, sizeof(*this));
+    }
+    file.close();
+    temp.close();
+    if (deleted) {
+        remove("baquar.txt");
+        rename("file.txt", "baquar.txt");
+        cout << "Your title has been deleted" << endl;
+    } else {
+        remove("file.txt");
+        cout << "Data not found" << endl;
+    }
+    }
+     catch(my_fileexist &e)
+    {
+        cout<<e.what()<<endl;
+    }
+}
+void Book::edit(const int bokid) {
+    try
+    {
+    bool edited = false;
+    fstream file("baquar.txt", ios::in | ios::out );
+    if (!file.is_open()) {
+         throw *(new my_fileexist);
+    }
+    file.read((char *)this, sizeof(*this));
+    while (!file.eof()) {
+        if (bokid == bookid) {
+            edited = true;
+            editingchoice();
+            file.seekp(int(file.tellg()) - sizeof(*this));
+            file.write((char *)this, sizeof(*this));
+            break;
+        }
+        file.read((char *)this, sizeof(*this));
+    }
+    file.close();
+    if (edited) {
+        cout << "Your title has been edited" << endl;
+    } else {
+        cout << "Data not found" << endl;
+    }
+    }
+    catch(my_fileexist &e)
+    {
+        cout<<e.what()<<endl;
+    }  
+}
+
+int menu() {
+    int choice;
+    cout << "\n1. Store new Book Record";
+    cout << "\n2. View All Book Titles";
+    cout << "\n3. Search by Title";
+    cout << "\n4. Delete";
+    cout << "\n5. Edit";
+    cout << "\n6. Exit";
+    cout << "\n\nEnter your choice: ";
+    cin >> choice;
+    cin.ignore();  // Consume newline character
+    return choice;
+}
+int main() {
+    Book b1;
+    int x;
+
+    while (true) {
+        int bokid; float pri;
+        string tit, auth;
+        switch (menu()) {
+            case 1:
+                cout << "Enter bookid, title, auther price"<<endl ;
+                cin >> bokid;
+                cin.ignore();
+                getline(cin, tit);
+                getline(cin, auth);
+                cin>>ws;
+                cin >> pri;
+                b1.inputBookafter(bokid , tit , auth , pri);
+                b1.store();  // store book_object into file
+                break;
+            case 2:
+                b1.viewAllTitles();
+                break;
+            case 3:
+                cout << "choose: 1. authername 2. bookid 3. title" << endl;
+                cin >> x;
+                cin.ignore();  // Consume newline character
+                if (x == 1) {
+                    cout << "enter authername" << endl;
+                    getline(cin, auth);
+                    b1.searchByauther(auth);
+                } else if (x == 2) {
+                    cout << "enter bookid" << endl;
+                    cin >> bokid;
+                    b1.searchBybookid(bokid);
+                } else if (x == 3) {
+                    cout << "enter title" << endl;
+                    getline(cin, tit);
+                    b1.searchByTitle(tit);
+                } else {
+                    cout << "Invalid Choice" << endl;
+                }
+                break;
+
+            case 4:
+                cout << "Enter bokid to delete: ";
+                cin >> ws;
+                cin >> bokid;
+                b1.del(bokid);
+                break;
+            case 5:
+                cout << "Enter bokid to edit: ";
+                cin >> bokid;
+                b1.edit(bokid);
+                break;
+           
+            case 6:
+                cout << "Exiting program. Goodbye!" << endl;
+                return 0;   
+            default:
+                cout << "Invalid Choice" << endl;
+        }
+    }
+}
